@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/w_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="10dp"
+    android:paddingEnd="8dp">
+
+    <ImageView
+        android:id="@+id/w_logo"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/logo_bg"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_launcher_fg" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/w_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="My Radio"
+            android:textColor="#F3EAD9"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/w_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Tap play"
+            android:textColor="#A99B85"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/w_prev"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="Previous station"
+        android:src="@drawable/ic_prev" />
+
+    <ImageButton
+        android:id="@+id/w_toggle"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="2dp"
+        android:layout_marginEnd="2dp"
+        android:background="@drawable/play_bg"
+        android:contentDescription="Play or pause"
+        android:src="@drawable/ic_play" />
+
+    <ImageButton
+        android:id="@+id/w_next"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="Next station"
+        android:src="@drawable/ic_next" />
+</LinearLayout>

@@ -1,0 +1,39 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.jovie.myradio'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.jovie.myradio'
+        minSdk 26
+        targetSdk 35
+        // CI passes the run number so every build installs as an update.
+        versionCode Integer.parseInt(System.getenv('BUILD_NUMBER') ?: '1')
+        versionName "1.0." + (System.getenv('BUILD_NUMBER') ?: '1')
+    }
+
+    signingConfigs {
+        // Fixed key so new builds install over the old one (personal sideloaded app).
+        radio {
+            storeFile file('radio.keystore')
+            storePassword 'myradio123'
+            keyAlias 'radio'
+            keyPassword 'myradio123'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.radio
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
