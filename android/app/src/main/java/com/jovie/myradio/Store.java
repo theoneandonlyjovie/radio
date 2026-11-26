@@ -228,6 +228,22 @@ public final class Store {
         return now;
     }
 
+    /** Blocking. Turns a .pls / .m3u playlist link into the stream inside it; other links come back unchanged. */
+    public static String resolvePlaylist(String url) {
+        String path = url.toLowerCase(Locale.US).replaceAll("[?#].*$", "");
+        if (!path.endsWith(".pls") && !path.endsWith(".m3u")) return url;
+        try {
+            String body = new String(get(url, 64 * 1024), "UTF-8");
+            for (String line : body.split("\\r?\\n")) {
+                String l = line.trim();
+                int eq = l.indexOf('=');
+                if (l.toLowerCase(Locale.US).startsWith("file") && eq > 0) l = l.substring(eq + 1).trim();
+                if (l.startsWith("http://") || l.startsWith("https://")) return l;
+            }
+        } catch (Exception ignored) { }
+        return url;
+    }
+
     // ---- logos ----
     private static final LruCache<String, Bitmap> LOGOS = new LruCache<>(40);
 

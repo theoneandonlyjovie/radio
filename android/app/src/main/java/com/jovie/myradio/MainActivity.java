@@ -59,6 +59,8 @@ public class MainActivity extends Activity {
         nToggle.setOnClickListener(v -> PlayerService.send(this, new Intent(PlayerService.ACTION_TOGGLE)));
         findViewById(R.id.n_next).setOnClickListener(v -> PlayerService.send(this, new Intent(PlayerService.ACTION_NEXT)));
         findViewById(R.id.go).setOnClickListener(v -> search());
+        findViewById(R.id.addTest).setOnClickListener(v -> addByLink(false));
+        findViewById(R.id.addSave).setOnClickListener(v -> addByLink(true));
         q.setOnEditorActionListener((v, id, ev) -> {
             if (id == EditorInfo.IME_ACTION_SEARCH || (ev != null && ev.getKeyCode() == KeyEvent.KEYCODE_ENTER)) { search(); return true; }
             return false;
@@ -143,7 +145,7 @@ public class MainActivity extends Activity {
         List<Store.Station> favs = Store.favs(this);
         if (idx >= favs.size()) return;
         Store.Station s = favs.get(idx);
-        String[] items = {"Move up", "Move down", "Find a different stream", "Remove"};
+        String[] items = {"Move up", "Move down", "Find a different stream", "Remove", "Change stream link"};
         new AlertDialog.Builder(this)
                 .setTitle(s.name)
                 .setItems(items, (d, which) -> {
@@ -153,9 +155,76 @@ public class MainActivity extends Activity {
                     if (which == 1 && idx < f.size() - 1) { f.add(idx + 1, f.remove(idx)); Store.saveFavs(this, f); }
                     if (which == 2) findFor(s);
                     if (which == 3) { f.remove(idx); Store.saveFavs(this, f); }
+                    if (which == 4) { editLink(idx); return; }
                     renderFavs();
                     renderResults();
                     RadioWidget.updateAll(this);
+                })
+                .show();
+    }
+
+    // ---- add / change by link ----
+    private static boolean looksLikeUrl(String u) { return u.startsWith("http://") || u.startsWith("https://"); }
+
+    private void addByLink(boolean save) {
+        EditText nameIn = findViewById(R.id.addName), urlIn = findViewById(R.id.addUrl);
+        TextView am = findViewById(R.id.addMsg);
+        String url = urlIn.getText().toString().trim();
+        String name = nameIn.getText().toString().trim();
+        am.setVisibility(View.VISIBLE);
+        if (!looksLikeUrl(url)) { am.setText("Paste a link that starts with http:// or https://"); urlIn.requestFocus(); return; }
+        if (name.isEmpty()) { String h = android.net.Uri.parse(url).getHost(); name = h == null ? "My station" : h; }
+        final String finalName = name;
+        am.setText("Checking the link…");
+        bg.execute(() -> {
+            String stream = Store.resolvePlaylist(url);
+            main.post(() -> {
+                Store.Station s = new Store.Station();
+                s.name = finalName; s.url = stream;
+                if (save) {
+                    List<Store.Station> f = Store.favs(this);
+                    f.add(s);
+                    Store.saveFavs(this, f);
+                    nameIn.setText(""); urlIn.setText("");
+                    am.setText("Added " + finalName + " to your favourites.");
+                    renderFavs();
+                    RadioWidget.updateAll(this);
+                } else {
+                    am.setText("Playing it now. If you hear it, tap Add to favourites.");
+                }
+                PlayerService.send(this, new Intent(PlayerService.ACTION_PLAY_STATION).putExtra(PlayerService.EXTRA_STATION, toJson(s)));
+            });
+        });
+    }
+
+    private void editLink(int idx) {
+        List<Store.Station> favs = Store.favs(this);
+        if (idx >= favs.size()) return;
+        Store.Station s = favs.get(idx);
+        EditText in = new EditText(this);
+        in.setInputType(android.text.InputType.TYPE_TEXT_VARIATION_URI | android.text.InputType.TYPE_CLASS_TEXT);
+        in.setText(s.url);
+        in.setSelectAllOnFocus(true);
+        in.setPadding(48, 32, 48, 32);
+        new AlertDialog.Builder(this)
+                .setTitle("Stream link for " + s.name)
+                .setView(in)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Save", (d, w) -> {
+                    String url = in.getText().toString().trim();
+                    if (!looksLikeUrl(url)) return;
+                    bg.execute(() -> {
+                        String stream = Store.resolvePlaylist(url);
+                        main.post(() -> {
+                            List<Store.Station> f = Store.favs(this);
+                            if (idx >= f.size()) return;
+                            Store.Station st = f.get(idx);
+                            st.url = stream; st.q = ""; st.m = ""; st.miss = false;
+                            Store.saveFavs(this, f);
+                            renderFavs();
+                            PlayerService.send(this, new Intent(PlayerService.ACTION_PLAY_INDEX).putExtra(PlayerService.EXTRA_INDEX, idx));
+                        });
+                    });
                 })
                 .show();
     }

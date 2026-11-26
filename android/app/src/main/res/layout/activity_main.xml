@@ -168,6 +168,92 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
+            android:text="Add by link"
+            android:textColor="@color/ink"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Paste a stream address (.m3u and .pls links work too)"
+            android:textColor="@color/dim"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/addName"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:background="@drawable/input_bg"
+            android:hint="Station name"
+            android:inputType="textCapWords"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:textColor="@color/ink"
+            android:textColorHint="@color/dim"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/addUrl"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/input_bg"
+            android:hint="https://…"
+            android:inputType="textUri"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:textColor="@color/ink"
+            android:textColorHint="@color/dim"
+            android:textSize="16sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/addTest"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/input_bg"
+                android:stateListAnimator="@null"
+                android:text="Test it"
+                android:textAllCaps="false"
+                android:textColor="@color/ink"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/addSave"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_bg"
+                android:stateListAnimator="@null"
+                android:text="Add to favourites"
+                android:textAllCaps="false"
+                android:textColor="@color/onAmber"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/addMsg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/dim"
+            android:textSize="14sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
             android:text="Station directory by radio-browser.info"
             android:textColor="@color/dim"
             android:textSize="12sp" />
