@@ -92,6 +92,7 @@ public final class Store {
             for (String[] s : SEED) {
                 Station st = new Station();
                 st.name = s[0]; st.q = s[1]; st.m = s[2];
+                for (String[] k : KNOWN) if (st.name.equals(k[0])) applyKnown(st, k);
                 out.add(st);
             }
             saveFavs(c, out);
@@ -101,7 +102,23 @@ public final class Store {
             JSONArray a = new JSONArray(raw);
             for (int i = 0; i < a.length(); i++) out.add(Station.fromJson(a.getJSONObject(i)));
         } catch (Exception ignored) { }
+        // Fix-up for installs where the directory lookup couldn't find these.
+        boolean fixed = false;
+        for (Station s : out) {
+            if (!s.url.isEmpty()) continue;
+            for (String[] k : KNOWN) if (s.name.equals(k[0])) { applyKnown(s, k); fixed = true; }
+        }
+        if (fixed) saveFavs(c, out);
         return out;
+    }
+
+    // Streams found by hand (not in the public directory): name, stream, website label.
+    private static final String[][] KNOWN = {
+            {"Just Jazz – Pat Metheny", "https://drive.uber.radio/uber/jjrpatmetheny/icecast.audio", "Just Jazz Radio · Dubai"},
+    };
+
+    private static void applyKnown(Station s, String[] k) {
+        s.url = k[1]; s.dir = k[2]; s.q = ""; s.m = ""; s.miss = false; s.tags = "jazz";
     }
 
     public static synchronized void saveFavs(Context c, List<Station> list) {

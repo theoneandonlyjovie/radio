@@ -132,7 +132,10 @@ const SEED=[
   ['WFDU 89.1','WFDU','wfdu'],['WQXR 105.9','WQXR','wqxr'],['WFMT 98.7','WFMT','wfmt'],
   ['WRTI 90.1','WRTI','wrti'],['Just Jazz – Pat Metheny','Pat Metheny','metheny']
 ].map(([name,q,m],i)=>({id:'seed'+i,name,q,m,url:'',favicon:'',country:'',tags:'',bitrate:0}));
-const load=()=>{try{const v=JSON.parse(localStorage.getItem(KEY));if(v)return v}catch(e){} return SEED.map(s=>({...s}))};
+const KNOWN={'Just Jazz – Pat Metheny':'https://drive.uber.radio/uber/jjrpatmetheny/icecast.audio'};
+const known=f=>{if(!f.url&&KNOWN[f.name]){f.url=KNOWN[f.name];f.dir='Just Jazz Radio · Dubai';delete f.q;delete f.m;delete f.miss}return f};
+SEED.forEach(known);
+const load=()=>{try{const v=JSON.parse(localStorage.getItem(KEY));if(v)return v.map(known)}catch(e){} return SEED.map(s=>({...s}))};
 let favs=load(), cur=null, results=[], editing=false, sleepT=null, sleepIdx=0;
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(favs))}catch(e){} $('bak').value=JSON.stringify(favs)};
 
