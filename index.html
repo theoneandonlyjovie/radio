@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Radio">
+<meta name="theme-color" content="#16130f">
+<title>My Radio</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%2316130f'/%3E%3Ccircle cx='90' cy='90' r='46' fill='none' stroke='%23ff9f43' stroke-width='12'/%3E%3Ccircle cx='90' cy='90' r='14' fill='%23ff9f43'/%3E%3C/svg%3E">
+<style>
+/* VOICE: quiet, tactile, no clutter
+   IDEA: the glowing face of an old tabletop tuner
+   PICTURE: the now-playing dial with a sweeping needle
+   COLOUR/TYPE: walnut-black ground, amber glow, cream text; Space Grotesk
+   LAYOUT: dial on top, favourites as big tap rows, search tucked below */
+:root{--bg:#16130f;--panel:#221d17;--line:#3a3128;--ink:#f3ead9;--dim:#a99b85;--amber:#ff9f43;--glow:#ffcf8a}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Space Grotesk",system-ui,sans-serif;overflow-x:clip;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 24px) env(safe-area-inset-left)}
+.wrap{max-width:560px;margin:0 auto;padding:16px}
+h1{font-size:15px;font-weight:600;color:var(--dim);margin:4px 0 12px;letter-spacing:.02em}
+.dial{background:radial-gradient(120% 90% at 50% 0%,#3a2a17 0%,var(--panel) 60%);border:1px solid var(--line);border-radius:22px;padding:18px 18px 20px;position:relative;overflow:hidden}
+.scale{position:relative;height:46px;margin:0 4px 14px;border-bottom:1px solid #5a4630}
+.scale i{position:absolute;bottom:0;width:1px;background:#6b5438}
+.needle{position:absolute;top:-4px;bottom:-4px;width:3px;border-radius:2px;background:var(--amber);box-shadow:0 0 12px var(--amber);left:10%;transition:left .9s cubic-bezier(.3,1.4,.5,1)}
+.now{display:flex;gap:14px;align-items:center}
+.logo{width:64px;height:64px;border-radius:14px;background:#2d251c center/cover no-repeat;flex:none;display:grid;place-items:center;font-weight:700;font-size:22px;color:var(--amber)}
+.meta{flex:1}
+.meta b{display:block;font-size:22px;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta span{color:var(--dim);font-size:14px}
+.play{width:64px;height:64px;border-radius:50%;border:0;background:var(--amber);color:#1b1209;flex:none;display:grid;place-items:center;cursor:pointer}
+.play:disabled{opacity:.35}
+.play svg{width:26px;height:26px}
+.on .meta span{color:var(--glow)}
+.row2{display:flex;gap:10px;align-items:center;margin-top:14px}
+.row2 input[type=range]{flex:1;accent-color:var(--amber)}
+.sleep{background:none;border:1px solid var(--line);color:var(--dim);border-radius:999px;padding:8px 12px;font:inherit;font-size:13px;min-height:36px}
+h2{font-size:18px;margin:26px 0 8px;display:flex;justify-content:space-between;align-items:baseline}
+h2 button{font:inherit;font-size:14px;color:var(--amber);background:none;border:0;padding:8px}
+ul{list-style:none;margin:0;padding:0}
+li{display:flex;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px solid var(--line)}
+li .s{flex:1;display:flex;gap:12px;align-items:center;background:none;border:0;color:inherit;font:inherit;text-align:left;padding:4px 0;min-height:48px;cursor:pointer}
+li .s img,li .s .ph{width:44px;height:44px;border-radius:10px;object-fit:cover;background:#2d251c;flex:none;display:grid;place-items:center;color:var(--amber);font-weight:700}
+li .s div{overflow:hidden}
+li .s b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+li .s small{color:var(--dim);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+li.cur b{color:var(--amber)}
+.ic{width:44px;height:44px;flex:none;border:0;background:none;color:var(--dim);font-size:22px;border-radius:10px;cursor:pointer}
+.ic.star{color:var(--amber)}
+.edit .up,.edit .del{display:inline-block}.up,.del{display:none}
+.empty{color:var(--dim);padding:16px 6px}
+form{display:flex;gap:8px}
+input[type=search],input[type=url],input[type=text],textarea{flex:1;font:inherit;font-size:16px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px;min-height:48px;width:100%}
+.btn{font:inherit;font-weight:600;background:var(--amber);color:#1b1209;border:0;border-radius:12px;padding:0 16px;min-height:48px;cursor:pointer}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
+:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
+details{margin-top:22px;border-top:1px solid var(--line);padding-top:10px}
+summary{cursor:pointer;color:var(--dim);padding:10px 0;min-height:44px}
+.stack{display:grid;gap:8px;margin:8px 0 14px}
+.note{color:var(--dim);font-size:13px}
+.err{color:#ff8a7a;font-size:14px;margin:6px 0 0;min-height:1em}
+@media(prefers-reduced-motion:reduce){.needle{transition:none}}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrap">
+  <h1>My Radio</h1>
+
+  <section class="dial" id="dial" aria-live="polite">
+    <div class="scale" id="scale"><div class="needle" id="needle"></div></div>
+    <div class="now">
+      <div class="logo" id="nlogo">♪</div>
+      <div class="meta"><b id="nname">Pick a station</b><span id="nsub">Tap a favourite below</span></div>
+      <button class="play" id="play" aria-label="Play" disabled></button>
+    </div>
+    <div class="row2">
+      <span class="note">Vol</span>
+      <input type="range" id="vol" min="0" max="1" step="0.05" value="1" aria-label="Volume">
+      <button class="sleep" id="sleep">Sleep: off</button>
+    </div>
+  </section>
+
+  <h2>Favourites <button id="editBtn">Edit</button></h2>
+  <ul id="favs"></ul>
+
+  <h2>Find a station</h2>
+  <form id="sform">
+    <input type="search" id="q" placeholder="Name, city or genre, e.g. WNYC" autocomplete="off" enterkeyhint="search">
+    <button class="btn">Search</button>
+  </form>
+  <p class="err" id="serr"></p>
+  <ul id="results"></ul>
+
+  <details>
+    <summary>Add by stream link · Back up favourites</summary>
+    <div class="stack">
+      <input type="text" id="cname" placeholder="Station name">
+      <input type="url" id="curl" placeholder="https://… stream link">
+      <button class="btn ghost" id="cadd">Add to favourites</button>
+    </div>
+    <p class="note">Backup: copy this text somewhere safe, or paste a saved backup and tap Restore.</p>
+    <textarea id="bak" rows="4"></textarea>
+    <div class="stack" style="grid-template-columns:1fr 1fr">
+      <button class="btn ghost" id="bcopy">Copy</button>
+      <button class="btn ghost" id="brest">Restore</button>
+    </div>
+    <p class="note">Station directory by radio-browser.info. Only secure (https) streams are shown, since phones block the others.</p>
+  </details>
+</div>
+
+<audio id="au" preload="none"></audio>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY='myradio.favs.v1';
+const PLAY='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>';
+const PAUSE='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>';
+const SPIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="8" stroke-dasharray="30 60"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.9s" repeatCount="indefinite"/></circle></svg>';
+
+// Your myTuner favourites. Streams are looked up in the station directory on first open.
+const SEED=[
+  ['WFMU 91.1','WFMU','wfmu'],['WBGO Jazz 88.3','WBGO','wbgo'],['WPSC 88.7 Brave New Radio','WPSC','wpsc'],
+  ['WMSC 90.3','WMSC','wmsc'],['Alt 92.3 HD2','Alt 92.3','alt 92'],['GotRadio Americana','GotRadio Americana','americana'],
+  ['WWOZ 90.7 New Orleans','WWOZ','wwoz'],['80s 90s Hits','80s 90s Hits','80'],['WFUV 90.7','WFUV','wfuv'],
+  ['WFDU 89.1','WFDU','wfdu'],['WQXR 105.9','WQXR','wqxr'],['WFMT 98.7','WFMT','wfmt'],
+  ['WRTI 90.1','WRTI','wrti'],['Just Jazz – Pat Metheny','Pat Metheny','metheny']
+].map(([name,q,m],i)=>({id:'seed'+i,name,q,m,url:'',favicon:'',country:'',tags:'',bitrate:0}));
+const load=()=>{try{const v=JSON.parse(localStorage.getItem(KEY));if(v)return v}catch(e){} return SEED.map(s=>({...s}))};
+let favs=load(), cur=null, results=[], editing=false, sleepT=null, sleepIdx=0;
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(favs))}catch(e){} $('bak').value=JSON.stringify(favs)};
+
+const au=$('au'), play=$('play');
+play.innerHTML=PLAY;
+
+// dial ticks
+$('scale').insertAdjacentHTML('beforeend',Array.from({length:41},(_,i)=>`<i style="left:${i*2.5}%;height:${i%5?10:22}px"></i>`).join(''));
+const hash=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h};
+
+const thumb=st=>st.favicon?`<img src="${esc(st.favicon)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ph',textContent:'${esc((st.name||'?')[0])}'}))">`:`<span class="ph">${esc((st.name||'?')[0])}</span>`;
+const sub=st=>[st.country,st.tags&&st.tags.split(',').slice(0,2).join(', '),st.bitrate?st.bitrate+' kbps':''].filter(Boolean).join(' · ');
+const isFav=id=>favs.some(f=>f.id===id);
+
+function renderFavs(){
+  $('favs').classList.toggle('edit',editing);
+  $('editBtn').textContent=editing?'Done':'Edit';
+  $('favs').innerHTML=favs.length?favs.map((st,i)=>`<li class="${cur&&cur.id===st.id?'cur':''}">
+    <button class="s" data-play="${i}">${thumb(st)}<div><b>${esc(st.name)}</b><small>${esc(st.url?(st.dir&&st.dir!==st.name?st.dir+' · ':'')+(sub(st)||'Saved station'):st.miss?'Not found yet · tap to search':'Finding stream…')}</small></div></button>
+    <button class="ic up" data-find="${i}" aria-label="Find a different stream">⌕</button>
+    <button class="ic up" data-up="${i}" aria-label="Move up">↑</button>
+    <button class="ic del" data-del="${i}" aria-label="Remove">✕</button></li>`).join('')
+    :`<li class="empty">No favourites yet. Search for a station below and tap ☆ to save it.</li>`;
+}
+function renderResults(){
+  $('results').innerHTML=results.map((st,i)=>`<li class="${cur&&cur.id===st.id?'cur':''}">
+    <button class="s" data-rplay="${i}">${thumb(st)}<div><b>${esc(st.name)}</b><small>${esc(sub(st))}</small></div></button>
+    <button class="ic ${isFav(st.id)?'star':''}" data-star="${i}" aria-label="${isFav(st.id)?'Remove from':'Add to'} favourites">${isFav(st.id)?'★':'☆'}</button></li>`).join('');
+}
+
+function setNow(st,state){
+  $('nname').textContent=st?st.name:'Pick a station';
+  $('nsub').textContent=st?({loading:'Tuning in…',playing:'Live now',paused:'Paused',error:'Could not play this stream'}[state]||sub(st)):'Tap a favourite below';
+  const lg=$('nlogo'); lg.style.backgroundImage=st&&st.favicon?`url("${st.favicon.replace(/"/g,'%22')}")`:''; lg.textContent=st&&st.favicon?'':(st?st.name[0]:'♪');
+  $('dial').classList.toggle('on',state==='playing');
+  play.disabled=!st; play.innerHTML=state==='loading'?SPIN:state==='playing'?PAUSE:PLAY;
+  play.setAttribute('aria-label',state==='playing'?'Pause':'Play');
+  if(st)$('needle').style.left=(5+hash(st.id)%90)+'%';
+}
+
+function tune(st){
+  cur=st; au.src=st.url; au.volume=+$('vol').value;
+  setNow(st,'loading');
+  au.play().catch(()=>setNow(st,'error'));
+  if('mediaSession' in navigator){
+    navigator.mediaSession.metadata=new MediaMetadata({title:st.name,artist:'Live radio',artwork:st.favicon?[{src:st.favicon,sizes:'512x512'}]:[]});
+  }
+  renderFavs(); renderResults();
+}
+au.addEventListener('playing',()=>cur&&setNow(cur,'playing'));
+au.addEventListener('waiting',()=>cur&&setNow(cur,'loading'));
+au.addEventListener('pause',()=>cur&&setNow(cur,'paused'));
+au.addEventListener('error',()=>cur&&au.src&&setNow(cur,'error'));
+
+play.addEventListener('click',()=>{
+  if(!cur)return;
+  if(au.paused){au.src=cur.url;setNow(cur,'loading');au.play().catch(()=>setNow(cur,'error'))}
+  else{au.pause();au.removeAttribute('src');au.load();setNow(cur,'paused')} // drop the buffer so resume is live
+});
+if('mediaSession' in navigator){
+  navigator.mediaSession.setActionHandler('play',()=>au.paused&&play.click());
+  navigator.mediaSession.setActionHandler('pause',()=>!au.paused&&play.click());
+  const step=d=>{if(!favs.length)return;const i=favs.findIndex(f=>cur&&f.id===cur.id);tune(favs[(i+d+favs.length)%favs.length])};
+  try{navigator.mediaSession.setActionHandler('nexttrack',()=>step(1));navigator.mediaSession.setActionHandler('previoustrack',()=>step(-1))}catch(e){}
+}
+$('vol').addEventListener('input',e=>au.volume=+e.target.value);
+
+const SLEEP=[0,15,30,60,90];
+$('sleep').addEventListener('click',()=>{
+  sleepIdx=(sleepIdx+1)%SLEEP.length; clearTimeout(sleepT);
+  const m=SLEEP[sleepIdx]; $('sleep').textContent='Sleep: '+(m?m+' min':'off');
+  if(m)sleepT=setTimeout(()=>{if(!au.paused)play.click();sleepIdx=0;$('sleep').textContent='Sleep: off'},m*60000);
+});
+
+$('favs').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  const findFor=f=>{$('q').value=f.q||f.name.replace(/\s[\d.]+.*$/,'');search($('q').value);$('q').scrollIntoView({behavior:'smooth',block:'start'})};
+  if(b.dataset.play!=null&&!editing){const f=favs[+b.dataset.play];
+    if(f.url)tune(f); else if(f.miss)findFor(f); else {f.miss=false;resolveAll()}}
+  if(b.dataset.find!=null)findFor(favs[+b.dataset.find]);
+  if(b.dataset.del!=null){favs.splice(+b.dataset.del,1);save();renderFavs();renderResults()}
+  if(b.dataset.up!=null){const i=+b.dataset.up;if(i>0){[favs[i-1],favs[i]]=[favs[i],favs[i-1]];save();renderFavs()}}
+});
+$('editBtn').addEventListener('click',()=>{editing=!editing;renderFavs()});
+$('results').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  if(b.dataset.rplay!=null)tune(results[+b.dataset.rplay]);
+  if(b.dataset.star!=null){const st=results[+b.dataset.star];
+    if(isFav(st.id))favs=favs.filter(f=>f.id!==st.id);else favs.push(st);
+    save();renderFavs();renderResults()}
+});
+
+const HOSTS=['de1.api.radio-browser.info','nl1.api.radio-browser.info','at1.api.radio-browser.info','all.api.radio-browser.info'];
+// Ask the directory; returns playable (https) stations, most-listened first, or null if unreachable.
+async function lookup(q){
+  const qs=`/json/stations/search?name=${encodeURIComponent(q)}&limit=60&hidebroken=true&order=clickcount&reverse=true`;
+  for(const h of HOSTS){
+    try{
+      const r=await fetch('https://'+h+qs); if(!r.ok)continue;
+      const data=await r.json(), seen=new Set();
+      return data.filter(s=>(s.url_resolved||'').startsWith('https://')).map(s=>({
+        id:s.stationuuid,name:(s.name||'').trim(),url:s.url_resolved,
+        favicon:(s.favicon||'').startsWith('https://')?s.favicon:'',
+        country:s.countrycode||s.country||'',tags:s.tags||'',bitrate:s.bitrate||0
+      })).filter(s=>{const k=s.name.toLowerCase();if(seen.has(k))return false;seen.add(k);return true});
+    }catch(e){}
+  }
+  return null;
+}
+async function search(q){
+  $('serr').textContent='Searching…'; $('results').innerHTML='';
+  const r=await lookup(q);
+  if(!r){$('serr').textContent='Could not reach the station directory. Check your connection and try again.';return}
+  results=r.slice(0,25);
+  $('serr').textContent=results.length?'':'No playable stations found. Try a shorter name or the call letters.';
+  renderResults();
+}
+// Fill in streams for pre-loaded favourites that don't have one yet.
+let resolving=false;
+async function resolveAll(){
+  if(resolving)return; resolving=true;
+  for(const f of favs){
+    if(f.url||!f.q)continue;
+    const r=await lookup(f.q); if(!r)break;
+    const hit=r.find(s=>s.name.toLowerCase().includes(f.m));
+    if(hit){Object.assign(f,{url:hit.url,favicon:hit.favicon,country:hit.country,tags:hit.tags,bitrate:hit.bitrate,dir:hit.name});delete f.q;delete f.m}
+    else f.miss=true;
+    save(); renderFavs();
+  }
+  resolving=false;
+}
+$('sform').addEventListener('submit',e=>{e.preventDefault();const q=$('q').value.trim();if(q)search(q)});
+
+$('cadd').addEventListener('click',()=>{
+  const name=$('cname').value.trim(),url=$('curl').value.trim();
+  if(!name||!/^https?:\/\//.test(url)){$('cname').focus();return}
+  favs.push({id:'c'+Date.now(),name,url,favicon:'',country:'',tags:'',bitrate:0});
+  save();renderFavs();$('cname').value=$('curl').value='';
+});
+$('bcopy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('bak').value);$('bcopy').textContent='Copied'}catch(e){$('bak').select()}});
+$('brest').addEventListener('click',()=>{
+  try{const v=JSON.parse($('bak').value);if(Array.isArray(v)){favs=v.filter(s=>s&&s.id&&s.name&&s.url).map(s=>({id:String(s.id),name:String(s.name),url:String(s.url),favicon:String(s.favicon||''),country:String(s.country||''),tags:String(s.tags||''),bitrate:+s.bitrate||0}));save();renderFavs();$('brest').textContent='Restored'}}
+  catch(e){$('brest').textContent='Not a valid backup'}
+});
+
+save(); renderFavs(); resolveAll();
+}
+</script>
+</body>
+</html>
