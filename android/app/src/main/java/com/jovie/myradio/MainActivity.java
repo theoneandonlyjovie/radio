@@ -47,6 +47,21 @@ public class MainActivity extends Activity {
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
         setContentView(R.layout.activity_main);
+        // Keep content clear of the status bar, nav bar and keyboard (Android 11+ draws edge to edge).
+        if (Build.VERSION.SDK_INT >= 30) {
+            getWindow().setDecorFitsSystemWindows(false);
+            View root = findViewById(R.id.root);
+            root.setOnApplyWindowInsetsListener((v, insets) -> {
+                android.graphics.Insets bars = insets.getInsets(android.view.WindowInsets.Type.systemBars());
+                android.graphics.Insets ime = insets.getInsets(android.view.WindowInsets.Type.ime());
+                v.setPadding(bars.left, bars.top, bars.right, Math.max(bars.bottom, ime.bottom));
+                View focus = getCurrentFocus();
+                if (focus != null && ime.bottom > 0) v.post(() -> scrollToShow(focus));
+                return android.view.WindowInsets.CONSUMED;
+            });
+        }
+        findViewById(R.id.n_credits).setOnClickListener(v -> showCredits());
+        findViewById(R.id.n_song).setOnClickListener(v -> showCredits());
         favList = findViewById(R.id.favList);
         resultList = findViewById(R.id.resultList);
         nName = findViewById(R.id.n_name);
@@ -55,6 +70,9 @@ public class MainActivity extends Activity {
         nToggle = findViewById(R.id.n_toggle);
         msg = findViewById(R.id.msg);
         q = findViewById(R.id.q);
+        for (int id : new int[]{R.id.q, R.id.addName, R.id.addUrl}) {
+            findViewById(id).setOnFocusChangeListener((v, has) -> { if (has) v.postDelayed(() -> scrollToShow(v), 350); });
+        }
 
         nToggle.setOnClickListener(v -> PlayerService.send(this, new Intent(PlayerService.ACTION_TOGGLE)));
         findViewById(R.id.n_next).setOnClickListener(v -> PlayerService.send(this, new Intent(PlayerService.ACTION_NEXT)));
@@ -107,6 +125,27 @@ public class MainActivity extends Activity {
         nStatus.setTextColor(getColor(playing ? R.color.amber : R.color.dim));
         nToggle.setImageResource(playing ? R.drawable.ic_pause : R.drawable.ic_play);
         setLogo(nLogo, cur == null ? "" : cur.favicon);
+        String song = Store.songLine(this);
+        findViewById(R.id.n_songRow).setVisibility(song.isEmpty() || cur == null ? View.GONE : View.VISIBLE);
+        ((TextView) findViewById(R.id.n_song)).setText(song);
+    }
+
+    private void showCredits() {
+        String title = Store.songTitle(this), artist = Store.songArtist(this);
+        if (title.isEmpty() && artist.isEmpty()) return;
+        Credits.show(this, artist, title);
+    }
+
+    /** Scrolls the list so the field being typed in sits above the keyboard. */
+    private void scrollToShow(View focus) {
+        android.widget.ScrollView sv = findViewById(R.id.scroll);
+        android.graphics.Rect r = new android.graphics.Rect();
+        focus.getDrawingRect(r);
+        try { sv.offsetDescendantRectToMyCoords(focus, r); } catch (IllegalArgumentException e) { return; }
+        int margin = (int) (24 * getResources().getDisplayMetrics().density);
+        int bottomVisible = sv.getScrollY() + sv.getHeight();
+        if (r.bottom + margin > bottomVisible) sv.smoothScrollTo(0, r.bottom + margin - sv.getHeight());
+        else if (r.top < sv.getScrollY()) sv.smoothScrollTo(0, Math.max(0, r.top - margin));
     }
 
     // ---- favourites ----

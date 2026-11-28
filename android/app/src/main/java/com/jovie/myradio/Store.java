@@ -83,7 +83,12 @@ public final class Store {
             {"Just Jazz – Pat Metheny", "Pat Metheny", "metheny"},
     };
 
-    private static SharedPreferences p(Context c) { return c.getSharedPreferences(PREFS, Context.MODE_PRIVATE); }
+    private static Context app; // for the on-disk logo cache
+
+    private static SharedPreferences p(Context c) {
+        if (app == null) app = c.getApplicationContext();
+        return c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+    }
 
     public static synchronized List<Station> favs(Context c) {
         List<Station> out = new ArrayList<>();
@@ -141,6 +146,22 @@ public final class Store {
     public static String status(Context c) { return p(c).getString("status", ""); }
 
     public static boolean playing(Context c) { return p(c).getBoolean("playing", false); }
+
+    /** Current song from the station ("" when unknown). */
+    public static String songArtist(Context c) { return p(c).getString("songArtist", ""); }
+
+    public static String songTitle(Context c) { return p(c).getString("songTitle", ""); }
+
+    /** "Artist – Title", or "" when the station hasn't sent one. */
+    public static String songLine(Context c) {
+        String a = songArtist(c), t = songTitle(c);
+        if (t.isEmpty()) return a;
+        return a.isEmpty() ? t : a + " – " + t;
+    }
+
+    public static void setSong(Context c, String artist, String title) {
+        p(c).edit().putString("songArtist", artist).putString("songTitle", title).apply();
+    }
 
     public static void setState(Context c, String status, boolean playing) {
         p(c).edit().putString("status", status).putBoolean("playing", playing).apply();
@@ -249,11 +270,20 @@ public final class Store {
 
     public static Bitmap cachedLogo(String url) { return url == null || url.isEmpty() ? null : LOGOS.get(url); }
 
-    /** Blocking. */
+    private static java.io.File logoFile(String url) {
+        return app == null ? null : new java.io.File(app.getCacheDir(), "logo_" + Integer.toHexString(url.hashCode()) + ".png");
+    }
+
+    /** Blocking. Memory, then disk, then network. */
     public static Bitmap logo(String url) {
         if (url == null || url.isEmpty()) return null;
         Bitmap b = LOGOS.get(url);
         if (b != null) return b;
+        java.io.File f = logoFile(url);
+        if (f != null && f.exists()) {
+            b = BitmapFactory.decodeFile(f.getPath());
+            if (b != null) { LOGOS.put(url, b); return b; }
+        }
         try {
             byte[] data = get(url, 2 * 1024 * 1024);
             BitmapFactory.Options o = new BitmapFactory.Options();
@@ -270,16 +300,23 @@ public final class Store {
                 b = Bitmap.createScaledBitmap(b, Math.max(1, (int) (b.getWidth() * k)), Math.max(1, (int) (b.getHeight() * k)), true);
             }
             LOGOS.put(url, b);
+            if (f != null) {
+                try (java.io.FileOutputStream fo = new java.io.FileOutputStream(f)) { b.compress(Bitmap.CompressFormat.PNG, 100, fo); }
+                catch (Exception ignored) { }
+            }
             return b;
         } catch (Throwable t) { return null; }
     }
 
-    private static byte[] get(String url, int max) throws Exception {
+    public static final String USER_AGENT = "MyRadio/1.1 ( https://github.com/theoneandonlyjovie/radio )";
+
+    static byte[] get(String url, int max) throws Exception {
         HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
         con.setConnectTimeout(8000);
         con.setReadTimeout(10000);
         con.setInstanceFollowRedirects(true);
-        con.setRequestProperty("User-Agent", "MyRadio/1.0 (personal Android app)");
+        con.setRequestProperty("User-Agent", USER_AGENT);
+        con.setRequestProperty("Accept", "application/json, */*");
         try (InputStream in = con.getInputStream()) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             byte[] buf = new byte[8192];

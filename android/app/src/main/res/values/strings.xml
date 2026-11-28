@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="widget_desc">Your favourite stations with play, pause and skip</string>
+    <string name="widget_favs_desc">Play controls plus one-tap buttons for your top 4 stations</string>
 </resources>
